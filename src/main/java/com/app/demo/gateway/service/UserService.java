@@ -92,6 +92,7 @@ public class UserService {
 
     @Transactional
     public Mono<User> registerUser(AdminUserDTO userDTO, String password) {
+        String genKey = RandomUtil.generateActivationKey();
         return userRepository
             .findOneByLogin(userDTO.getLogin().toLowerCase())
             .flatMap(existingUser -> {
@@ -127,7 +128,9 @@ public class UserService {
                     // new user is not active
                     newUser.setActivated(false);
                     // new user gets registration key
-                    newUser.setActivationKey(RandomUtil.generateActivationKey());
+                    newUser.setActivationKey(genKey);
+                    newUser.setActivated(true);
+                    //this.activateRegistration(genKey);
                     return newUser;
                 })
             )

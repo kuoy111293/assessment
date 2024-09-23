@@ -3,6 +3,7 @@ package com.app.demo.gateway.web.rest;
 import static com.app.demo.gateway.security.SecurityUtils.AUTHORITIES_KEY;
 import static com.app.demo.gateway.security.SecurityUtils.JWT_ALGORITHM;
 
+import com.app.demo.gateway.web.rest.base.BaseResponse;
 import com.app.demo.gateway.web.rest.vm.LoginVM;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
@@ -53,7 +54,7 @@ public class AuthenticateController {
     }
 
     @PostMapping("/authenticate")
-    public Mono<ResponseEntity<JWTToken>> authorize(@Valid @RequestBody Mono<LoginVM> loginVM) {
+    public Mono<ResponseEntity<?>> authorize(@Valid @RequestBody Mono<LoginVM> loginVM) {
         return loginVM
             .flatMap(login ->
                 authenticationManager
@@ -63,7 +64,7 @@ public class AuthenticateController {
             .map(jwt -> {
                 HttpHeaders httpHeaders = new HttpHeaders();
                 httpHeaders.setBearerAuth(jwt);
-                return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
+                return new ResponseEntity<>(new BaseResponse<>(true, "Login successfully.", new JWTToken(jwt)), httpHeaders, HttpStatus.OK);
             });
     }
 

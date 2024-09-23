@@ -1,6 +1,7 @@
 package com.app.demo.gateway.web.rest;
 
 import com.app.demo.gateway.repository.UserRepository;
+import com.app.demo.gateway.security.AuthoritiesConstants;
 import com.app.demo.gateway.security.SecurityUtils;
 import com.app.demo.gateway.service.MailService;
 import com.app.demo.gateway.service.UserService;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -60,7 +62,10 @@ public class AccountResource {
         if (isPasswordLengthInvalid(managedUserVM.getPassword())) {
             throw new InvalidPasswordException();
         }
-        return userService.registerUser(managedUserVM, managedUserVM.getPassword()).doOnSuccess(mailService::sendActivationEmail).then();
+        return userService
+            .registerUser(managedUserVM, managedUserVM.getPassword())
+            //.doOnSuccess(mailService::sendActivationEmail)
+            .then();
     }
 
     /**
@@ -70,6 +75,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
      */
     @GetMapping("/activate")
+    @PreAuthorize("hasRole('" + AuthoritiesConstants.ADMIN + "')")
     public Mono<Void> activateAccount(@RequestParam(value = "key") String key) {
         return userService
             .activateRegistration(key)
@@ -84,6 +90,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be returned.
      */
     @GetMapping("/account")
+    @PreAuthorize("hasRole('" + AuthoritiesConstants.ADMIN + "')")
     public Mono<AdminUserDTO> getAccount() {
         return userService
             .getUserWithAuthorities()
@@ -99,6 +106,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
+    @PreAuthorize("hasRole('" + AuthoritiesConstants.ADMIN + "')")
     public Mono<Void> saveAccount(@Valid @RequestBody AdminUserDTO userDTO) {
         return SecurityUtils
             .getCurrentUserLogin()
@@ -134,6 +142,7 @@ public class AccountResource {
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the new password is incorrect.
      */
     @PostMapping(path = "/account/change-password")
+    @PreAuthorize("hasRole('" + AuthoritiesConstants.ADMIN + "')")
     public Mono<Void> changePassword(@RequestBody PasswordChangeDTO passwordChangeDto) {
         if (isPasswordLengthInvalid(passwordChangeDto.getNewPassword())) {
             throw new InvalidPasswordException();
@@ -147,6 +156,7 @@ public class AccountResource {
      * @param mail the mail of the user.
      */
     @PostMapping(path = "/account/reset-password/init")
+    @PreAuthorize("hasRole('" + AuthoritiesConstants.ADMIN + "')")
     public Mono<Void> requestPasswordReset(@RequestBody String mail) {
         return userService
             .requestPasswordReset(mail)
@@ -170,6 +180,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the password could not be reset.
      */
     @PostMapping(path = "/account/reset-password/finish")
+    @PreAuthorize("hasRole('" + AuthoritiesConstants.ADMIN + "')")
     public Mono<Void> finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
         if (isPasswordLengthInvalid(keyAndPassword.getNewPassword())) {
             throw new InvalidPasswordException();

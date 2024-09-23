@@ -19,10 +19,10 @@
 spring:
   config:
     activate:
-      on-profile: '!api-docs'
+      on-profile: 'api-docs'
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
 ---
 reactive:
   feign:
@@ -119,11 +119,13 @@ spring:
           predicates:
             - name: Path
               args:
-                pattern: "'/services/'+serviceId.toLowerCase()+'/**'"
+                #pattern: "'/services/'+serviceId.toLowerCase()+'/**'"
+                pattern: "'/'+serviceId.toLowerCase()+'/**'"
           filters:
             - name: RewritePath
               args:
-                regexp: "'/services/' + serviceId.toLowerCase() + '/(?<remaining>.*)'"
+                #regexp: "'/services/' + serviceId.toLowerCase() + '/(?<remaining>.*)'"
+                regexp: "'/' + serviceId.toLowerCase() + '/(?<remaining>.*)'"
                 replacement: "'/${remaining}'"
       httpclient:
         pool:
